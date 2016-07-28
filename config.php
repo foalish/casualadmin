@@ -27,7 +27,7 @@ $siteShortTitle=  'PlaceHolder_siteShortTitle';
         if ($row[0] == 'siteTitle') { $siteTitle = $row[1];}
          if ($row[0] == 'siteFooter') { $siteFooter = $row[1];}
           if ($row[0] == 'siteBrand') { $siteBrand = $row[1];}
-           if ($row[0] == 'siteAddress') { $siteBrand = $row[1];}
+           if ($row[0] == 'siteAddress') { $siteAddress = $row[1];}
             if ($row[0] == 'siteShortTitle') { $siteShortTitle = $row[1];}
          } 
     

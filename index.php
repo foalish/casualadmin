@@ -1,9 +1,70 @@
 <?php
-include('SQLFunctions.php');
+require_once('SQLFunctions.php');
 session_start();
+
+/*if there is no Current Navigation set, default to the first on on the list based on order*/
+if(!isset($_SESSION['CurNav']))
+{ 	echo "CurNav Not Set <br>";/*this is a testing comment*/
+    $sql="SELECT Nav_ID
+                ,Display_Order 
+                ,Nav_Title
+          FROM Nav
+          ORDER BY Display_Order 
+                ,Nav_Title
+          LIMIT 1";
+    $link = connectDB();
+    /*run query, assign the session variable*/
+     if ($result = mysqli_query($link,$sql)){
+      while ($row = mysqli_fetch_array($result))  {
+          $_SESSION['CurNav'] = $row[0];
+      } 
+    }
+    mysqli_close ( $link );
+}
+/*Set $CurNav variable to the value of the CurNav session variable*/
+$CurNav = $_SESSION['CurNav'];
+
+
+/*Simlar to CRUD, logging out the users that haven't been active in the last 10 mins*/
+if(isset($_SESSION['user_id']))
+{
+    if ($_SESSION['timeout'] + 10 * 60 < time()) {
+      /* session timed out */
+      header("Location: Logout.php"); 
+    } else {
+      $_SESSION['timeout'] = time();
+      /*For convinience, adding a button to get back to the AdminInxed.php page*/
+      echo  "<a href='AdminIndex.php'><button>Admin Menu</button></a>";
+    }
+}
 ?>
 
-<!DOCTYPE html>
+<!-- The following CSS aligns the Navigation buttons to display side by side, in the 
+     middle of the screen with similar color, and font as the original navigation -->
+<style type="text/css">
+.NavMenu div {
+  float:left;
+}
+.NavMenu {
+  float: right;
+  position: relative;
+  left: -50%; 
+}
+.NavMenu > .child {
+  position: relative;
+  left: 50%;
+}
+
+input[type=submit] {
+  text-transform: uppercase;
+  font-weight: 400;
+  letter-spacing: 3px;
+  margin:5px;
+  margin-top: 20px;
+}
+</style>
+
+
 <html lang="en">
 
 <head>
@@ -38,7 +99,7 @@ session_start();
 <body>
 
     <div class="brand"><?php echo $siteBrand; ?></div>
-    <div class="address-bar">?php echo $siteAddress; ?></div>
+    <div class="address-bar"><?php echo $siteAddress; ?></div>
 
     <!-- Navigation -->
     <nav class="navbar navbar-default" role="navigation">
@@ -52,9 +113,42 @@ session_start();
                     <span class="icon-bar"></span>
                 </button>
                 <!-- navbar-brand is hidden on larger screens, but visible when the menu is collapsed -->
-                <a class="navbar-brand" href="index.html">Business Casual</a>
+                <a class="navbar-brand" href="index.php"><?php echo $siteShortTitle;?></a>
             </div>
-            <!-- Collect the nav links, forms, and other content for toggling -->
+            
+            <?php 
+  /*Query Navigation*/
+	$sql="SELECT Nav_Title
+	            ,Nav_ID
+        FROM Nav
+        ORDER BY Display_Order 
+                ,Nav_Title";
+	/*echo '<br>sql :'.$sql;*/
+ 	$link = connectDB();
+/*Pull in our custom CSS using div class*/ 	
+echo "<div class='NavMenu'>";
+  echo "<div class='child'>";
+  if ($result = mysqli_query($link,$sql)){
+      /*Each row returned will get it's own div with a form contained in it.  
+        They will act as dynamic buttons sending the user to UpdateCurNav.php*/
+      while ($row = mysqli_fetch_array($result))  {
+        echo "<div>
+                <form action='UpdateCurNav.php' method='post'>
+                  <input type='submit' class='btn' name='submit' value='{$row[0]}'>
+                  <input type='hidden' name='NewNav' value='{$row[1]}'>
+                </form>
+              </div>";
+      } 
+    }
+  echo "</div>" ;   
+echo "</div>" ;   
+  /*Close database connection*/
+	mysqli_close ( $link );
+?>
+
+            
+            
+            <!-- Collect the nav links, forms, and other content for toggling 
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                 <ul class="nav navbar-nav">
                     <li>
@@ -71,7 +165,7 @@ session_start();
                     </li>
                 </ul>
             </div>
-            <!-- /.navbar-collapse -->
+             /.navbar-collapse -->
         </div>
         <!-- /.container -->
     </nav>
@@ -111,20 +205,20 @@ session_start();
                         </a>
                     </div>
                     <h2 class="brand-before">
-                        <small>Welcome to</small>
+                        <small>Welcome to the</small>
                     </h2>
                     <h1 class="brand-name"><?php echo $siteShortTitle; ?></h1>
-                    <hr class="tagline-divider">
-                    <h2>
+               <!--     <hr class="tagline-divider">
+                        <h2>
                         <small>By
                             <strong>Start Bootstrap</strong>
-                        </small>
-                    </h2>
+                        </small> 
+                    </h2>  -->
                 </div>
             </div>
         </div>
 
-        <div class="row">
+     <!--   <div class="row">
             <div class="box">
                 <div class="col-lg-12">
                     <hr>
@@ -139,9 +233,9 @@ session_start();
                     <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc placerat diam quis nisl vestibulum dignissim. In hac habitasse platea dictumst. Interdum et malesuada fames ac ante ipsum primis in faucibus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.</p>
                 </div>
             </div>
-        </div>
+        </div> -->
 
-        <div class="row">
+      <!--  <div class="row">
             <div class="box">
                 <div class="col-lg-12">
                     <hr>
@@ -150,10 +244,43 @@ session_start();
                     </h2>
                     <hr>
                     <p>Use as many boxes as you like, and put anything you want in them! They are great for just about anything, the sky's the limit!</p>
-                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc placerat diam quis nisl vestibulum dignissim. In hac habitasse platea dictumst. Interdum et malesuada fames ac ante ipsum primis in faucibus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.</p>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc placerat diam quis nisl vestibulum dignissim. In hac habitasse platea dictumst. Interdum et malesuada fames ac ante ipsum primis in faucibus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.</p> 
                 </div>
             </div>
         </div>
+
+    </div> -->
+    <!-- /.container -->
+    
+    
+<?php 
+    /*Query Content for the Current Navigation*/
+	$sql="SELECT ContentTitle
+	            ,Content
+          FROM Content
+          WHERE Nav_ID = ".$CurNav."
+          ORDER BY Display_Order";
+   /*echo '<br>sql :'.$sql;*/
+ 
+ 	$link = connectDB();
+
+  /*Execute the query, for each row returned, display a box with the results of the content in it.*/
+  if ($result = mysqli_query($link,$sql)){
+      while ($row = mysqli_fetch_array($result))  {
+          echo "<div class='row'>";
+          echo "  <div class='box'>";
+          echo "    <div class='col-lg-12'>";
+          echo "      <hr><h2 class='intro-text text-center'><strong>{$row[0]}</strong></h2><hr>";
+          echo "<p>{$row[1]}</p>";
+          echo "</div>";
+          echo "</div>";
+          echo "</div>";
+      } 
+    }
+    
+  /*Close database connection*/
+	mysqli_close ( $link );
+?>                       
 
     </div>
     <!-- /.container -->
